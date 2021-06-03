@@ -730,7 +730,7 @@ class FilenamePrompt(_BasePrompt):
         # The model needs to be sorted so we get the correct first/last index
         self._file_model.directoryLoaded.connect(
             lambda: self._file_model.sort(0))
-    
+
     def _get_valid_dirs(self, path):
         dirs = []
         try:
@@ -740,17 +740,16 @@ class FilenamePrompt(_BasePrompt):
                 hidden = self._to_complete not in index.data()
                 if not hidden:
                     dirs.append(index.data())
-                # self._file_view.setRowHidden(index.row(), index.parent(), hidden)
         except FileNotFoundError:
             log.prompt.debug("Directory doesn't exist, can't \
                              get valid dirs")
-        
+ 
         return dirs
 
     def _do_completion(self, idx, which):
         filename = self._file_model.fileName(idx)
         valid_dirs = self._get_valid_dirs(self._current_path)
-        while not filename in valid_dirs and idx.isValid():
+        while idx.isValid() and not self._file_view.isRowHidden(idx.row(), idx.parent()):
             if which == 'prev':
                 idx = self._file_view.indexAbove(idx)
             else:
@@ -800,7 +799,7 @@ class FilenamePrompt(_BasePrompt):
         # wrap around if we arrived at beginning/end
         if not idx.isValid():
             idx = last_index if which == 'prev' else first_index
-        
+
         idx = self._do_completion(idx, which)
 
         selmodel.setCurrentIndex(
