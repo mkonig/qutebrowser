@@ -88,6 +88,8 @@ class TestFileCompletion:
 
         # ...and foo should get completed from f
         prompt.item_focus("next")
+        # '..' and 'foo' should get completed from 'f'
+        prompt.item_focus("next")
         assert prompt._lineedit.text() == str(tmp_path)
         prompt.item_focus("next")
         assert prompt._lineedit.text() == str(testdir / "foo")
