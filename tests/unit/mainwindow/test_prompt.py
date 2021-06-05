@@ -27,7 +27,6 @@ from qutebrowser.utils import usertypes
 
 
 class TestFileCompletion:
-
     @pytest.fixture
     def get_prompt(self, qtbot, config_stub, key_config_stub):
         """Get a function to display a prompt with a path."""
@@ -45,19 +44,22 @@ class TestFileCompletion:
             assert prompt._lineedit.text() == path
 
             return prompt
+
         return _get_prompt_func
 
-    @pytest.mark.parametrize('steps, where, subfolder', [
-        (1, 'next', '..'),
-        (1, 'prev', 'c'),
-        (2, 'next', 'a'),
-        (2, 'prev', 'b'),
-    ])
-    def test_simple_completion(self, tmp_path, get_prompt, steps, where,
-                               subfolder):
+    @pytest.mark.parametrize(
+        "steps, where, subfolder",
+        [
+            (1, "next", ".."),
+            (1, "prev", "c"),
+            (2, "next", "a"),
+            (2, "prev", "b"),
+        ],
+    )
+    def test_simple_completion(self, tmp_path, get_prompt, steps, where, subfolder):
         """Simply trying to tab through items."""
-        testdir = tmp_path / 'test'
-        for directory in 'abc':
+        testdir = tmp_path / "test"
+        for directory in "abc":
             (testdir / directory).mkdir(parents=True)
 
         prompt = get_prompt(str(testdir) + os.sep)
@@ -69,12 +71,12 @@ class TestFileCompletion:
 
     def test_backspacing_path(self, qtbot, tmp_path, get_prompt):
         """When we start deleting a path we want to see the subdir."""
-        testdir = tmp_path / 'test'
+        testdir = tmp_path / "test"
 
-        for directory in ['bar', 'foo']:
+        for directory in ["bar", "foo"]:
             (testdir / directory).mkdir(parents=True)
 
-        prompt = get_prompt(str(testdir / 'foo') + os.sep)
+        prompt = get_prompt(str(testdir / "foo") + os.sep)
 
         # Deleting /f[oo/]
         with qtbot.wait_signal(prompt._file_model.directoryLoaded):
@@ -83,28 +85,32 @@ class TestFileCompletion:
         prompt._set_fileview_root(prompt._lineedit.text())
 
         # ...and foo should get completed from f
-        prompt.item_focus('next')
+        prompt.item_focus("next")
         assert prompt._lineedit.text() == str(tmp_path)
-        prompt.item_focus('next')
-        assert prompt._lineedit.text() == str(testdir / 'foo')
+        prompt.item_focus("next")
+        assert prompt._lineedit.text() == str(testdir / "foo")
 
         # Deleting /[foo]
         for _ in range(3):
             qtbot.keyPress(prompt._lineedit, Qt.Key_Backspace)
 
         # We should now show / again, so tabbing twice gives us .. -> bar
-        prompt.item_focus('next')
-        prompt.item_focus('next')
-        assert prompt._lineedit.text() == str(testdir / 'bar')
+        prompt.item_focus("next")
+        prompt.item_focus("next")
+        assert prompt._lineedit.text() == str(testdir / "bar")
 
-    @pytest.mark.parametrize("keys,expected",
-                            [([], ['..', 'bar', 'bat', 'foo']),
-                            ([Qt.Key_F], ['..', 'foo']),
-                            ([Qt.Key_A], ['..', 'bar', 'bat'])])
+    @pytest.mark.parametrize(
+        "keys,expected",
+        [
+            ([], ["..", "bar", "bat", "foo"]),
+            ([Qt.Key_F], ["..", "foo"]),
+            ([Qt.Key_A], ["..", "bar", "bat"]),
+        ],
+    )
     def test_filtering_path(self, qtbot, tmp_path, get_prompt, keys, expected):
-        testdir = tmp_path / 'test'
+        testdir = tmp_path / "test"
 
-        for directory in ['bar', 'foo', 'bat']:
+        for directory in ["bar", "foo", "bat"]:
             (testdir / directory).mkdir(parents=True)
 
         prompt = get_prompt(str(testdir) + os.sep)
@@ -115,8 +121,7 @@ class TestFileCompletion:
         num_rows = prompt._file_model.rowCount(prompt._file_view.rootIndex())
         visible = []
         for row in range(num_rows):
-            parent = prompt._file_model.index(
-                os.path.dirname(prompt._lineedit.text()))
+            parent = prompt._file_model.index(os.path.dirname(prompt._lineedit.text()))
             index = prompt._file_model.index(row, 0, parent)
             if not prompt._file_view.isRowHidden(index.row(), index.parent()):
                 visible.append(index.data())
@@ -125,5 +130,5 @@ class TestFileCompletion:
     @pytest.mark.linux
     def test_root_path(self, get_prompt):
         """With / as path, show root contents."""
-        prompt = get_prompt('/')
-        assert prompt._file_model.rootPath() == '/'
+        prompt = get_prompt("/")
+        assert prompt._file_model.rootPath() == "/"
