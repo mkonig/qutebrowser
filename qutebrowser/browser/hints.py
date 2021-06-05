@@ -1190,6 +1190,7 @@ class ContextHinter(WordHinter):
             "name": lambda elem: elem["name"],
             "title": lambda elem: elem["title"],
             "value": lambda elem: elem["value"],
+            "id": lambda elem: elem["id"],
             "placeholder": lambda elem: elem["placeholder"],
             "src": lambda elem: elem["src"].split('/')[-1],
             "href": lambda elem: elem["href"].split('/')[-1],
