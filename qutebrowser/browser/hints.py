@@ -1101,6 +1101,7 @@ class WordHinter:
             "alt": lambda elem: elem["alt"],
             "name": lambda elem: elem["name"],
             "title": lambda elem: elem["title"],
+            "value": lambda elem: elem["value"],
             "placeholder": lambda elem: elem["placeholder"],
             "src": lambda elem: elem["src"].split('/')[-1],
             "href": lambda elem: elem["href"].split('/')[-1],
@@ -1109,8 +1110,8 @@ class WordHinter:
 
         extractable_attrs = collections.defaultdict(list, {
             "img": ["alt", "title", "src"],
-            "a": ["title", "href", "text"],
-            "input": ["name", "placeholder"],
+            "a": ["text", "title", "href"],
+            "input": ["value", "name", "placeholder"],
             "textarea": ["name", "placeholder"],
             "button": ["text"]
         })
@@ -1127,11 +1128,21 @@ class WordHinter:
         for candidate in words:
             if not candidate:
                 continue
-            match = re.search('[A-Za-z]{3,}', candidate)
-            if not match:
+            candidate = candidate.lower()
+            candidate = re.sub('[^a-z ]', ' ', candidate)
+            candidate = re.sub(' +', ' ', candidate)
+            candidate = candidate.strip()
+            # match = re.search('[a-z ]{3,}', candidate)
+            # if not match:
+                # continue
+            # if 1 < match.end() - match.start():
+                # yield match[0].lower()
+            if len(candidate) >= 3:
+                yield candidate
+            else:
                 continue
-            if 4 < match.end() - match.start() < 8:
-                yield candidate[match.start():match.end()].lower()
+
+        yield ""
 
     def any_prefix(self, hint: str, existing: Iterable[str]) -> bool:
         return any(hint.startswith(e) or e.startswith(hint) for e in existing)
@@ -1144,16 +1155,123 @@ class WordHinter:
         """Filter hints which don't start with the given prefix."""
         return (h for h in hints if not self.any_prefix(h, existing))
 
+    def build_hint(self, words, existing):
+        hint = ""
+        if len(words):
+            hint = words[0][:3]
+            if hint in existing:
+                for word in words:
+                    if len(word) > 0:
+                        hint += word[0]
+
+        missing_characters = 3 - len(hint)
+        if missing_characters > 0:
+            if len(words[0]) > 0:
+                hint += words[0][1:missing_characters + 1]
+            else:
+                hint += "a"
+        return hint
+
+    def get_chars_from_alphabet(self):
+        for char in ascii_lowercase:
+            yield char
+
+
+    def create_hint(self, text, existing_words=[], hint_length=3):
+        if not text:
+            return None
+
+        hint = ""
+
+        if len(re.sub(" ", "", text)) < hint_length:
+            char_from_alphabet = self.get_chars_from_alphabet()
+
+            while hint in existing_words or hint == "" or len(hint) < hint_length:
+                hint = re.sub(" ", "", text) + next(char_from_alphabet)
+        else:
+            words = text.split()
+            if len(words[0]) >= hint_length:
+                hint = words[0][:hint_length]
+
+            num_chars_of_other_word = 0
+            first_try_three_words = True
+            third_letter_pos = 2
+            second_letter_pos = 1
+            first_letter_pos = 0
+
+            while hint in existing_words or len(hint) < 3 or hint == "":
+                if len(words) == 1:
+                    hint = (
+                        words[0][first_letter_pos]
+                        + words[0][second_letter_pos]
+                        + words[0][third_letter_pos]
+                    )
+                    if third_letter_pos + 1 < len(words[0]):
+                        third_letter_pos += 1
+                    elif second_letter_pos + 2 < len(words[0]):
+                        second_letter_pos += 1
+                        third_letter_pos = second_letter_pos + 1
+                    elif first_letter_pos + 3 < len(words[0]):
+                        first_letter_pos += 1
+                        second_letter_pos = first_letter_pos + 1
+                        third_letter_pos = second_letter_pos + 1
+                    else:
+                        hint = None
+
+                elif len(words) == 2:
+                    hint = (
+                        words[0][: hint_length - num_chars_of_other_word]
+                        + words[1][:num_chars_of_other_word]
+                    )
+                    num_chars_of_other_word += 1
+                elif len(words) > 2:
+                    if first_try_three_words:
+                        hint = words[0][0] + words[1][0] + words[2][0]
+                        first_try_three_words = False
+                    else:
+                        hint = (
+                            words[0][: hint_length - num_chars_of_other_word]
+                            + words[1][:num_chars_of_other_word]
+                        )
+                    num_chars_of_other_word += 1
+
+        return hint
+
+    def filter_doubles(
+            self,
+            hints: Iterable[str],
+            existing: Iterable[str]
+    ) -> Iterator[str]:
+        for h in hints:
+            print("hint before creating: " + h)
+            for e in existing:
+                print("existing: " + e)
+            hint = self.create_hint(h, existing)
+            # hint = self.build_hint(words[:3], existing)
+            yield hint
+        yield "no hint found"
+
     def new_hint_for(self, elem: webelem.AbstractWebElement,
                      existing: Iterable[str],
                      fallback: Iterable[str]) -> Optional[str]:
         """Return a hint for elem, not conflicting with the existing."""
         new = self.tag_words_to_hints(self.extract_tag_words(elem))
-        new_no_prefixes = self.filter_prefixes(new, existing)
-        fallback_no_prefixes = self.filter_prefixes(fallback, existing)
+        newer = self.filter_doubles(new, existing)
+        # new_no_prefixes = self.filter_prefixes(new, existing)
+        # fallback_no_prefixes = self.filter_prefixes(fallback, existing)
         # either the first good, or None
-        return (next(new_no_prefixes, None) or
-                next(fallback_no_prefixes, None))
+        # return (next(new_no_prefixes, None) or
+                # next(fallback_no_prefixes, None))
+        t = next(newer, None)
+        if t != None:
+            print("hint: "+t)
+            if not t:
+                return "empty string"
+        else:
+            print("is none")
+            print(type(t))
+            return "test"
+        return t
 
     def hint(self, elems: _ElemsType) -> _HintStringsType:
         """Produce hint labels based on the html tags.
