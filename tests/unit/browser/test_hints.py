@@ -17,16 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
 
-import string
 import functools
 import itertools
 import operator
+import string
 
 import pytest
 from PyQt5.QtCore import QUrl
 
-from qutebrowser.utils import usertypes
 import qutebrowser.browser.hints
+from qutebrowser.utils import usertypes
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ def tabbed_browser(tabbed_browser_stubs, web_tab):
     tb = tabbed_browser_stubs[0]
     tb.widget.tabs = [web_tab]
     tb.widget.current_index = 1
-    tb.widget.cur_url = QUrl('https://www.example.com/')
+    tb.widget.cur_url = QUrl("https://www.example.com/")
     web_tab.container.expose()  # No elements found if we don't do this.
     return tb
 
@@ -49,7 +49,7 @@ def test_show_benchmark(benchmark, tabbed_browser, qtbot, mode_manager):
     tab = tabbed_browser.widget.tabs[0]
 
     with qtbot.wait_signal(tab.load_finished):
-        tab.load_url(QUrl('qute://testdata/data/hints/benchmark.html'))
+        tab.load_url(QUrl("qute://testdata/data/hints/benchmark.html"))
 
     manager = qutebrowser.browser.hints.HintManager(win_id=0)
 
@@ -63,13 +63,14 @@ def test_show_benchmark(benchmark, tabbed_browser, qtbot, mode_manager):
     benchmark(bench)
 
 
-def test_match_benchmark(benchmark, tabbed_browser, qtbot, mode_manager, qapp,
-                         config_stub):
+def test_match_benchmark(
+    benchmark, tabbed_browser, qtbot, mode_manager, qapp, config_stub
+):
     """Benchmark matching of hint labels."""
     tab = tabbed_browser.widget.tabs[0]
 
     with qtbot.wait_signal(tab.load_finished):
-        tab.load_url(QUrl('qute://testdata/data/hints/benchmark.html'))
+        tab.load_url(QUrl("qute://testdata/data/hints/benchmark.html"))
 
     config_stub.val.hints.scatter = False
     manager = qutebrowser.browser.hints.HintManager(win_id=0)
@@ -78,9 +79,9 @@ def test_match_benchmark(benchmark, tabbed_browser, qtbot, mode_manager, qapp,
         manager.start()
 
     def bench():
-        manager.handle_partial_key('a')
+        manager.handle_partial_key("a")
         qapp.processEvents()
-        manager.handle_partial_key('')
+        manager.handle_partial_key("")
         qapp.processEvents()
 
     benchmark(bench)
@@ -89,9 +90,9 @@ def test_match_benchmark(benchmark, tabbed_browser, qtbot, mode_manager, qapp,
         mode_manager.leave(usertypes.KeyMode.hint)
 
 
-@pytest.mark.parametrize('min_len', [0, 3])
-@pytest.mark.parametrize('num_chars', [5, 9])
-@pytest.mark.parametrize('num_elements', itertools.chain(range(1, 26), [125]))
+@pytest.mark.parametrize("min_len", [0, 3])
+@pytest.mark.parametrize("num_chars", [5, 9])
+@pytest.mark.parametrize("num_elements", itertools.chain(range(1, 26), [125]))
 def test_scattered_hints_count(min_len, num_chars, num_elements):
     """Test scattered hints function.
 
@@ -104,8 +105,7 @@ def test_scattered_hints_count(min_len, num_chars, num_elements):
     manager = qutebrowser.browser.hints.HintManager(win_id=0)
     chars = string.ascii_lowercase[:num_chars]
 
-    hints = manager._hint_scattered(min_len, chars,
-                                    list(range(num_elements)))
+    hints = manager._hint_scattered(min_len, chars, list(range(num_elements)))
 
     # Check if hints are unique
     assert len(hints) == len(set(hints))
@@ -149,5 +149,68 @@ def test_scattered_hints_count(min_len, num_chars, num_elements):
         assert num_chars ** (longest_hint_len - 1) < num_elements
         if shortest_hint_len == longest_hint_len:
             # Check that we really couldn't use any short links
-            assert ((num_chars ** longest_hint_len) - num_elements <
-                    len(chars) - 1)
+            assert (num_chars ** longest_hint_len) - num_elements < len(chars) - 1
+
+
+class TestContextHinter:
+    """Testing creation of a hint from text.
+    Following prerequisites should be fulfilled by the test:
+        - lower case
+        - only alphabetical letters
+        - spaces are stripped for beginning and entered
+        - no multiple consecutive spaces"""
+
+    context_hinter = qutebrowser.browser.hints.ContextHinter()
+
+    def test_creation_from_one_word_string(self):
+        assert self.context_hinter.create_hint("hello") == "hel"
+        assert self.context_hinter.create_hint("world") == "wor"
+
+    def test_creation_from_empty_word(self):
+        assert self.context_hinter.create_hint("") == None
+
+    def test_creation_when_hint_exists(self):
+        assert self.context_hinter.create_hint("hello", ["hel"]) == "heo"
+        assert self.context_hinter.create_hint("hello", ["hel", "heo"]) == "hll"
+        assert self.context_hinter.create_hint("hello", ["hel", "heo", "hll"]) == "hlo"
+        assert (
+            self.context_hinter.create_hint("hello", ["hel", "heo", "hll", "hlo"])
+            == "ell"
+        )
+
+    def test_creation_from_multiple_words_string(self):
+        assert self.context_hinter.create_hint("hello world") == "hel"
+
+    def test_creation_from_2_words_string_when_hint_exists(self):
+        assert self.context_hinter.create_hint("hello world", ["hel"]) == "hew"
+        assert self.context_hinter.create_hint("hello world", ["hel", "hew"]) == "hwo"
+        assert (
+            self.context_hinter.create_hint("hello world", ["hel", "hew", "hwo"])
+            == "wor"
+        )
+
+    def test_creation_from_3_words_string(self):
+        assert self.context_hinter.create_hint("hello world text") == "hel"
+
+    def test_creation_from_3_words_string_when_hint_exists(self):
+        text = "hello world text"
+        assert self.context_hinter.create_hint(text, ["hel"]) == "hwt"
+        assert self.context_hinter.create_hint(text, ["hel", "hwt"]) == "hew"
+        assert self.context_hinter.create_hint(text, ["hel", "hwt", "hew"]) == "hwo"
+        assert (
+            self.context_hinter.create_hint(text, ["hel", "hwt", "hew", "hwo"]) == "wor"
+        )
+
+    def test_special_cases(self):
+        assert self.context_hinter.create_hint("ci cd configuration") == "ccc"
+        assert self.context_hinter.create_hint("ci cd") == "cic"
+        assert self.context_hinter.create_hint("ci cd", ["cic"]) == "ccd"
+
+    def test_small_words(self):
+        assert self.context_hinter.create_hint("m k") == "mka"
+
+    def test_small_words_when_hint_exists(self):
+        assert self.context_hinter.create_hint("m k", ["mka"]) == "mkb"
+
+    def test_longer_hints(self):
+        assert self.context_hinter.create_hint("hello", [], 4) == "hall"
