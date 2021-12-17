@@ -150,6 +150,36 @@ argument_parser.add_argument(
     action="store_true",
     help="Always show selection, even if there is only a single match",
 )
+=======
+    return os.path.join(expanded, '')
+
+
+argument_parser = argparse.ArgumentParser(description=__doc__, usage=USAGE, epilog=EPILOG)
+argument_parser.add_argument('url', nargs='?', default=os.getenv('QUTE_URL'))
+argument_parser.add_argument('--password-store', '-p',
+                             default=expanded_path(os.getenv('PASSWORD_STORE_DIR', default='~/.password-store')),
+                             help='Path to your pass password-store (only used in pass-mode)', type=expanded_path)
+argument_parser.add_argument('--mode', '-M', choices=['pass', 'gopass'], default="pass",
+                             help='Select mode [gopass] to use gopass instead of the standard pass.')
+argument_parser.add_argument('--username-pattern', '-u', default=r'.*/(.+)',
+                             help='Regular expression that matches the username')
+argument_parser.add_argument('--username-target', '-U', choices=['path', 'secret'], default='path',
+                             help='The target for the username regular expression')
+argument_parser.add_argument('--password-pattern', '-P', default=r'(.*)',
+                             help='Regular expression that matches the password')
+argument_parser.add_argument('--dmenu-invocation', '-d', default='rofi -dmenu',
+                             help='Invocation used to execute a dmenu-provider')
+argument_parser.add_argument('--no-insert-mode', '-n', dest='insert_mode', action='store_false',
+                             help="Don't automatically enter insert mode")
+argument_parser.add_argument('--io-encoding', '-i', default='UTF-8',
+                             help='Encoding used to communicate with subprocesses')
+argument_parser.add_argument('--merge-candidates', '-m', action='store_true',
+                             help='Merge pass candidates for fully-qualified and registered domain name')
+argument_parser.add_argument('--extra-url-suffixes', '-s', default='',
+                             help='Comma-separated string containing extra suffixes (e.g local)')
+argument_parser.add_argument('--always-show-selection', dest='always_show_selection', action='store_true',
+                             help='Always show selection, even if there is only a single match')
+>>>>>>> 9637c45b037314e4e344ef24d1e99a09438b67da
 group = argument_parser.add_mutually_exclusive_group()
 group.add_argument(
     "--username-only", "-e", action="store_true", help="Only insert username"
