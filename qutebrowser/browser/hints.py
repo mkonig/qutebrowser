@@ -21,6 +21,7 @@
 
 import collections
 import functools
+import logging
 import os
 import re
 import html
@@ -1199,7 +1200,7 @@ class ContextHinter(WordHinter):
 
         extractable_attrs = collections.defaultdict(list, {
             "img": ["alt", "title", "src"],
-            "a": ["text", "title", "href"],
+            "a": ["title", "href", "text"],
             "input": ["id", "value", "name", "placeholder"],
             "textarea": ["name", "placeholder"],
             "button": ["text"]
@@ -1215,6 +1216,8 @@ class ContextHinter(WordHinter):
     ) -> Iterator[str]:
         """Take words and transform them to proper hints if possible."""
         for candidate in words:
+            output = candidate
+            log.hints.debug("candidate: " + candidate)
             if not candidate:
                 continue
             candidate = candidate.lower()
@@ -1241,13 +1244,19 @@ class ContextHinter(WordHinter):
         if not text:
             return None
 
+        log.hints.debug("text = "+ text)
+
         hint = ""
 
+        iterations = 0
         if len(re.sub(" ", "", text)) < hint_length:
             char_from_alphabet = self.get_chars_from_alphabet()
 
-            while hint in existing_words or hint == "" or len(hint) < hint_length:
+            while (hint in existing_words or hint == "" or hint == None or len(hint) < hint_length ) and iterations < 50:
+                iterations += 1
                 hint = re.sub(" ", "", text) + next(char_from_alphabet)
+                log.hints.debug("existing_words = " + str(existing_words))
+                log.hints.debug("char from alphabet hint = " + str(hint))
         else:
             words = text.split()
             if len(words[0]) >= hint_length:
@@ -1259,7 +1268,8 @@ class ContextHinter(WordHinter):
             second_letter_pos = 1
             first_letter_pos = 0
 
-            while hint in existing_words or len(hint) < 3 or hint == "":
+            while (hint in existing_words or hint == None or len(hint) < 3 or hint == "") and iterations < 50:
+                iterations += 1
                 if len(words) == 1:
                     hint = (
                         words[0][first_letter_pos]
@@ -1295,6 +1305,10 @@ class ContextHinter(WordHinter):
                         )
                     num_chars_of_other_word += 1
 
+                log.hints.debug("existing_words = " + str(existing_words))
+                log.hints.debug("context hint = " + str(hint))
+
+        log.hints.debug("resulting hint = " + str(hint))
         return hint
 
     def filter_doubles(
@@ -1304,7 +1318,6 @@ class ContextHinter(WordHinter):
     ) -> Iterator[str]:
         for h in hints:
             hint = self.create_hint(h, existing)
-            # hint = self.build_hint(words[:3], existing)
             yield hint
         yield "no hint found"
 
@@ -1312,6 +1325,7 @@ class ContextHinter(WordHinter):
                      existing: Iterable[str],
                      fallback: Iterable[str]) -> Optional[str]:
         """Return a hint for elem, not conflicting with the existing."""
+        log.hints.debug("elem: " + str(elem.tag_name()))
         new = self.tag_words_to_hints(self.extract_tag_words(elem))
         newer = self.filter_doubles(new, existing)
         # new_no_prefixes = self.filter_prefixes(new, existing)
@@ -1321,11 +1335,11 @@ class ContextHinter(WordHinter):
                 # next(fallback_no_prefixes, None))
         t = next(newer, None)
         if t != None:
-            print("hint: "+t)
+            log.hints.debug("elem: " + str(elem.tag_name()) +" hint: "+t)
             if not t:
                 return "empty string"
         else:
-            print("is none")
-            print(type(t))
-            return "test"
+            # log.hints.debug("elem: " + elem +" hint is none")
+            log.hints.debug(type(t))
+            return "test" 
         return t
