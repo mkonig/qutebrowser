@@ -1180,6 +1180,7 @@ class WordHinter:
             hints.append(hint)
         return hints
 
+
 class ContextHinter(WordHinter):
     def extract_tag_words(
             self, elem: webelem.AbstractWebElement
@@ -1216,7 +1217,6 @@ class ContextHinter(WordHinter):
     ) -> Iterator[str]:
         """Take words and transform them to proper hints if possible."""
         for candidate in words:
-            output = candidate
             log.hints.debug("candidate: " + candidate)
             if not candidate:
                 continue
@@ -1250,7 +1250,7 @@ class ContextHinter(WordHinter):
         first_letter_pos = 0
         iterations = 0
 
-        while (hint in existing_words or hint == None or len(hint) < hint_length or hint == "") and iterations < max_iterations:
+        while (hint in existing_words or hint is None or len(hint) < hint_length or hint == "") and iterations < max_iterations:
             iterations += 1
             if len(words) == 1:
                 hint = (
@@ -1293,8 +1293,7 @@ class ContextHinter(WordHinter):
         if not text:
             return None
 
-        log.hints.debug("text = "+ text)
-        max_iterations = 50
+        log.hints.debug("text = " + text)
 
         hint = ""
 
@@ -1302,11 +1301,9 @@ class ContextHinter(WordHinter):
             hint = self.create_hint_from_words(text, existing_words, hint_length)
             log.hints.debug("created hint: " + str(hint))
 
-
-        if hint == "" or hint == None or len(hint) < hint_length or hint in existing_words:
-            if hint == None:
+        if hint == "" or hint is None or len(hint) < hint_length or hint in existing_words:
+            if hint is None:
                 hint = ""
-            char_from_alphabet = self.get_chars_from_alphabet()
             log.hints.debug("Wrong hint: " + str(hint))
 
             if len(hint) < hint_length:
@@ -1315,7 +1312,7 @@ class ContextHinter(WordHinter):
             if len(hint) > hint_length:
                 hint = hint[:3]
 
-            for index in reversed(range(0,3)):
+            for index in reversed(range(0, 3)):
                 hint = hint[:index]
                 for char in self.get_chars_from_alphabet():
                     hint = hint[:index] + char
@@ -1336,13 +1333,11 @@ class ContextHinter(WordHinter):
             yield hint
         yield "no hint found"
 
-    def new_hint_for(self, elem: webelem.AbstractWebElement,
-                     existing: {}, context
-                    ) -> Optional[str]:
+    def new_hint_for(self, elem: webelem.AbstractWebElement, existing: {}, context) -> Optional[str]:
         """Return a hint for elem, not conflicting with the existing."""
         url = elem.resolve_url(context.baseurl)
 
-        if url != None:
+        if url is not None:
             url = url.toString()
             # if url in existing.keys():
                 # print("found url: " + url)
@@ -1355,7 +1350,7 @@ class ContextHinter(WordHinter):
         newer = self.filter_doubles(new, existing_hints)
 
         t = next(newer, None)
-        if t != None:
+        if t is not None:
             if not t:
                 log.hints.debug("Empty string as hint")
                 return "empty string", url
@@ -1363,7 +1358,7 @@ class ContextHinter(WordHinter):
             log.hints.debug(type(t))
             return "Hint was None", url
 
-        log.hints.debug("elem: " + str(elem.tag_name()) +" hint: "+t)
+        log.hints.debug("elem: " + str(elem.tag_name()) + " hint: " + t)
         return t, url
 
     def hint(self, elems: _ElemsType, context) -> _HintStringsType:
@@ -1384,7 +1379,7 @@ class ContextHinter(WordHinter):
         for elem in elems:
             if elem.tag_name() not in elem_order:
                 elem_order.append(elem.tag_name())
-        
+
         for tag in elem_order:
             for index in range(len(elems)):
                 if elems[index].tag_name() == tag:
@@ -1397,7 +1392,7 @@ class ContextHinter(WordHinter):
         t = set()
         for elem in elems:
             t.add(elem.tag_name())
-            
+
         log.hints.debug("all tags: " + " ".join(t))
         log.hints.debug("tag order: " + " ".join(elem_order))
         log.hints.debug("Resulting hints: " + " ".join(hints))
