@@ -1235,13 +1235,20 @@ class ContextHinter(WordHinter):
         for char in ascii_lowercase:
             yield char
 
+    def _is_valid_hint(self, hint, existing_hints, hint_length):
+        if hint in existing_hints or hint is None or len(hint) < hint_length or not hint:
+            return False
+        else:
+            return True
+
     def create_hint_from_words(self, text, existing_words, hint_length):
         max_iterations = 50
         hint = ""
         words = text.split()
 
-        if len(words[0]) >= hint_length:
-            hint = words[0][:hint_length]
+        for word in words[:hint_length]:
+            if self._is_valid_hint(word[:hint_length], existing_words, hint_length):
+                return word[:hint_length]
 
         num_chars_of_other_word = 0
         first_try_three_words = True
@@ -1250,7 +1257,7 @@ class ContextHinter(WordHinter):
         first_letter_pos = 0
         iterations = 0
 
-        while (hint in existing_words or hint is None or len(hint) < hint_length or hint == "") and iterations < max_iterations:
+        while not self._is_valid_hint(hint, existing_words, hint_length) and iterations < max_iterations:
             iterations += 1
             if len(words) == 1:
                 hint = (
@@ -1301,10 +1308,9 @@ class ContextHinter(WordHinter):
             hint = self.create_hint_from_words(text, existing_words, hint_length)
             log.hints.debug("created hint: " + str(hint))
 
-        if hint == "" or hint is None or len(hint) < hint_length or hint in existing_words:
+        if not self._is_valid_hint(hint, existing_words, hint_length):
             if hint is None:
                 hint = ""
-            log.hints.debug("Wrong hint: " + str(hint))
 
             if len(hint) < hint_length:
                 hint = hint + "aaa"
