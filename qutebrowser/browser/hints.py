@@ -1297,9 +1297,6 @@ class ContextHinter(WordHinter):
         return hint
 
     def create_hint(self, text, existing_words=[], hint_length=3):
-        if not text:
-            return None
-
         log.hints.debug("text = " + text)
 
         hint = ""
@@ -1358,10 +1355,10 @@ class ContextHinter(WordHinter):
         t = next(newer, None)
         if t is not None:
             if not t:
-                log.hints.debug("Empty string as hint")
+                log.hints.debug("Empty string as hint :" + str(elem))
                 return "empty string", url
         else:
-            log.hints.debug(type(t))
+            log.hints.debug("Hint was None: " + str(elem))
             return "Hint was None", url
 
         log.hints.debug("elem: " + str(elem.tag_name()) + " hint: " + t)
