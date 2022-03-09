@@ -47,6 +47,9 @@ Changed
   than `rofi` to ask for a password.
 - The `content.headers.custom` setting now accepts empty strings as values,
   resulting in an empty header being sent.
+- Renamed settings:
+  * `qt.low_end_device_mode` -> `qt.chromium.low_end_device_mode`
+  * `qt.process_model` -> `qt.chromium.process_model`
 
 Added
 ~~~~~
@@ -55,6 +58,9 @@ Added
   more emacs-like bindings.
 - New `{relative_index}` field for `tabs.title.format` (and `.pinned_format`)
   which shows relative tab numbers.
+- New `input.mode_override` option which allows overriding the current mode
+  based on the new URL when navigating or switching tabs.
+- New `qt.chromium.sandboxing` setting which allows to disable Chromium's sandboxing (mainly intended for development and testing)
 
 Fixed
 ~~~~~
@@ -70,6 +76,13 @@ Fixed
   shown when closing the last window (rather than closing any window, which
   would continue running that window's downloads). Unfortunately, more issues
   with `confirm_quit` and multiple windows remain.
+- Crash when a previous crash-log file contains non-ASCII characters (which
+  should never happen unless it was edited manually)
+- Due to changes in Debian, an old workaround (for broken QtWebEngine patching
+  on Debian) caused the inferior qutebrowser error page to be displayed, when
+  Chromium's would have worked fine. The workaround was now dropped.
+- Crash when using `<Ctrl-D>` (`:completion-item-del`) in the `:tab-focus`
+  list, rather than `:tab-select`.
 
 [[v2.4.1]]
 v2.4.1 (unreleased)
