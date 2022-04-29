@@ -28,6 +28,7 @@ import html
 import enum
 import dataclasses
 from string import ascii_lowercase
+from itertools import product
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -1263,8 +1264,8 @@ class ContextHinter(WordHinter):
 
     def _is_valid_hint(self, hint, existing_hints, hint_length):
         if (
-            hint in existing_hints
-            or hint is None
+            hint is None
+            or hint in existing_hints
             or len(hint) < hint_length
             or not hint
         ):
@@ -1343,18 +1344,16 @@ class ContextHinter(WordHinter):
             if hint is None:
                 hint = ""
 
-            if len(hint) < hint_length:
-                hint = hint + "aaa"
+            # chars = config.val.hints.chars
+            # min_chars = config.val.hints.min_chars
+            possible_hints = product("abcdefghijklmnopqrstxvwxyz", repeat = hint_length)
 
-            if len(hint) > hint_length:
-                hint = hint[:3]
-
-            for index in reversed(range(0, 3)):
-                hint = hint[:index]
-                for char in self.get_chars_from_alphabet():
-                    hint = hint[:index] + char
-                    if hint not in existing_words and len(hint) == hint_length:
-                        return hint
+            for possibility in possible_hints:
+                tmp_hint = ''.join(reversed(possibility))
+                log.hints.debug("product tmp_hint = " + tmp_hint)
+                if self._is_valid_hint(tmp_hint, existing_words, hint_length):
+                    log.hints.debug("resulting hint = " + tmp_hint)
+                    return tmp_hint
 
         log.hints.debug("resulting hint = " + str(hint))
         return hint
@@ -1390,13 +1389,13 @@ class ContextHinter(WordHinter):
         if t is not None:
             if not t:
                 log.hints.debug("Empty string as hint :" + str(elem))
-                return "empty string", url
+                return "empty string"
         else:
             log.hints.debug("Hint was None: " + str(elem))
-            return "Hint was None", url
+            return "Hint was None"
 
         log.hints.debug("elem: " + str(elem.tag_name()) + " hint: " + t)
-        return t, url
+        return t
 
     def hint(self, elems: _ElemsType, context) -> _HintStringsType:
         """Produce hint labels based on the html tags.
@@ -1413,7 +1412,7 @@ class ContextHinter(WordHinter):
         hints = [None] * len(elems)
         used_hints = {}  # dict of url, hint
         elem_order = ["button", "textarea", "a", "img", "input"]
-        log.hints.debug(elems)
+        # log.hints.debug(elems)
         for elem in elems:
             if elem.tag_name() not in elem_order:
                 elem_order.append(elem.tag_name())
@@ -1421,9 +1420,9 @@ class ContextHinter(WordHinter):
         for tag in elem_order:
             for index in range(len(elems)):
                 if elems[index].tag_name() == tag:
-                    hint, url = self.new_hint_for(elems[index], used_hints, context)
+                    hint = self.new_hint_for(elems[index], used_hints, context)
                     if not hint:
-                        raise HintingError("Not enough words in the dictionary.")
+                        raise HintingError("No hint found. Weird")
                     used_hints[index] = hint
                     hints[index] = hint
 
