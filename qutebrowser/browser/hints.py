@@ -1267,7 +1267,7 @@ class ContextHinter(WordHinter):
         if (
             hint is None
             or hint in existing_hints
-            or len(hint) < hint_length
+            or len(hint) != hint_length
             or not hint
         ):
             return False
@@ -1410,9 +1410,9 @@ class ContextHinter(WordHinter):
         Return:
             A list of hint strings, in the same order as the elements.
         """
-        hints = [None] * len(elems)
+        hints = [""] * len(elems)
         used_hints = {}  # dict of url, hint
-        elem_order = ["button", "textarea", "a", "img", "input"]
+        elem_order = ["textarea", "button", "a", "input", "img" ]
         # log.hints.debug(elems)
         for elem in elems:
             if elem.tag_name() not in elem_order:
