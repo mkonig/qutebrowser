@@ -245,13 +245,6 @@ qutebrowser is available
 https://flathub.org/apps/details/org.qutebrowser.qutebrowser[on Flathub]
 as `org.qutebrowser.qutebrowser`.
 
-NOTE: The Flatpak package is
-https://github.com/flathub/org.qutebrowser.qutebrowser/issues/8#issuecomment-799579975[looking for (co-)maintainers].
-The package recently was updated after being out of date for multiple years. It
-currently (March 2021) is up to date again. If that situation changes, consider
-to <<tox,install qutebrowser in a virtualenv>> instead, which is one of the
-officially maintained options and will always be up-to-date.
-
 On FreeBSD
 ----------
 
@@ -296,14 +289,15 @@ Nightly builds
 ~~~~~~~~~~~~~~
 
 If you want to test out new features before an official qutebrowser release, automated
-https://github.com/qutebrowser/qutebrowser/actions/workflows/bleeding.yml[nightly
+https://github.com/qutebrowser/qutebrowser/actions/workflows/nightly.yml[nightly
 builds] are available. To download them, open the lastest run (usually the first one),
-then download the archive at the bottom of the page. Note that due to GitHub
-limitations, all variants (Windows/macOS, 32/64 bit, debug/non-debug) are contained in a
-single archive.
+then download the archive at the bottom of the page.
 
 Those builds also include variants with debug logging enabled, which can be useful to
 track down issues.
+
+NOTE: Due to GitHub limitations, you need to be signed in with a GitHub account
+to download the files.
 
 https://chocolatey.org/packages/qutebrowser[Chocolatey package]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -348,6 +342,19 @@ The binary release ships with a QtWebEngine built without proprietary codec
 support. To get support for e.g. h264/mp4 videos, you'll need to build
 QtWebEngine from source yourself with support for that enabled.
 
+NOTE: Currently, qutebrowser
+https://github.com/qutebrowser/qutebrowser/issues/5020[does not use] macOS'
+https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution[Notarization],
+due to https://github.com/pyinstaller/pyinstaller/issues/6612[PyInstaller issues]
+(as well as the requirement to
+https://developer.apple.com/support/compare-memberships/[pay USD 100 per year to Apple]).
+Depending on your system settings, this might lead to errors such as
+"qutebrowser.app can't be opened because Apple cannot check it for malicious
+software." or "can't be opened because it is from an unidentified developer".
+You should be able to open the .app by right-clicking it and selecting "Open", see the
+https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac[macOS documentation]
+for details.
+
 This binary is also available through the https://brew.sh/[Homebrew] package
 manager as a https://github.com/Homebrew/homebrew-cask[cask]:
 
@@ -359,14 +366,15 @@ Nightly builds
 ~~~~~~~~~~~~~~
 
 If you want to test out new features before an official qutebrowser release, automated
-https://github.com/qutebrowser/qutebrowser/actions/workflows/bleeding.yml[nightly
+https://github.com/qutebrowser/qutebrowser/actions/workflows/nightly.yml[nightly
 builds] are available. To download them, open the lastest run (usually the first one),
-then download the archive at the bottom of the page. Note that due to GitHub
-limitations, all variants (Windows/macOS, 32/64 bit, debug/non-debug) are contained in a
-single archive.
+then download the archive at the bottom of the page.
 
 Those builds also include variants with debug logging enabled, which can be useful to
 track down issues.
+
+NOTE: Due to GitHub limitations, you need to be signed in with a GitHub account
+to download the files.
 
 Manual Install
 ~~~~~~~~~~~~~~

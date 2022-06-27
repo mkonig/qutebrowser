@@ -24,6 +24,17 @@ Added
 
 - On invalid commands/settings with a similarly spelled match, qutebrowser now
   suggests the correct name in its error messages.
+- New `:prompt-fileselect-external` command which can be used to spawn an
+  external file selector (`fileselect.folder.command`) from download filename
+  prompts (bound to `<Alt+e>` by default).
+- New `clock` value for `statusbar.widgets`, displaying the current time.
+- New `qute://start` built-in start page (not set as the default start page yet).
+- New `qute-1pass` userscript using the 1password commandline to fill
+  passwords.
+- New features in userscripts:
+    * `qutedmenu` gained new `window` and `private` options.
+    * `qute-keepassxc` now supports unlock-on-demand, multiple account
+      selection via rofi, and inserting TOTP-codes (experimental).
 
 Removed
 ~~~~~~~
@@ -55,12 +66,67 @@ Changed
   `true`) and `access-paste` (additionally allows pasting content, needed for
   websites like Photopea or GitHub Codespaces).
 - The default `hints.selectors` now also match the `treeitem` ARIA roles.
+- The `:click-element` command now can also click elements based on its ID
+  (`id`), a CSS selector (`css`), a position (`position`), or click the
+  currently focused element (`focused`).
+- The `:click-element` command now can select the first found element via
+  `--select-first`.
+- New `search.wrap_messages` setting, making it possible to disable search
+  wrapping messages.
+- The `:session-save` command now has a new `--no-history` flag, to exclude tab
+  history.
+- New widgets for `statusbar.widgets`:
+  *  `clock`, showing the current time
+  * `search_match`, showing the current match and total count when finding text
+    on a page
+- Messages shown by qutebrowser now don't automatically get interpreted as rich
+  text anymore. Thus, e.g. `:message-info <h1>test` now shows the given text.
+  To show rich text with `:message-*` commands, use their new `--rich` flag.
+  Note this is NOT a security issue, as only a small subset of HTML is
+  interpreted as rich text by Qt, independently from the website.
+- Improved output when loading Greasemonkey scripts.
 
 Fixed
 ~~~~~
 
 - When the devtools are clicked but `input.insert_mode.auto_enter` is set to
   `false`, insert mode now isn't entered anymore.
+- The search wrapping messages are now correctly displayed in (hopefully) all
+  cases with QtWebEngine.
+- When a message with the same text as a currently already displayed one gets
+  shown, qutebrowser used to only show one message. This is now only done when the
+  two messages are completely equivalent (text, level, etc.) instead of doing so
+  when only the text matches.
+
+[[v2.5.2]]
+v2.5.2 (2022-06-22)
+-------------------
+
+Fixed
+~~~~~
+
+- Packaging-related fixes:
+    * The `install` and `stacktrace` help pages are now included in the docs
+      shipped with qutebrowser when using the recommended packaging workflow.
+    * The Windows installer now more consistently uses the configured Windows
+      colors.
+    * The Windows installer now bases the desktop/start menu icon choices on
+      the existing install, if upgrading.
+    * The macOS release hopefully doesn't cause macOS to (falsely) claim that it
+      "is damaged and can't be opened" anymore.
+- The notification fixes in v2.5.1 caused new notification crashes (probably
+  more common than the ones being fixed...). Those are now fixed, along with a
+  (rather involved) test case to prevent similar issues in the future.
+- When a text was not found on a page, the associated message would be shown as
+  rich text (e.g. after `/<h1>`). With this release, this is fixed for search
+  messages, while the 3.0.0 release will change the default for all messages to be
+  plain-text. Note this is NOT a security issue, as only a small subset of HTML
+  is interpreted as rich text by Qt, independently from the website.
+- When a Greasemonkey script couldn't be loaded (e.g. due to an unreadable file),
+  qutebrowser would crash. It now shows an error instead.
+- Ever since the v1.2.0 release in 2018, the `content.default_encoding` setting
+  was not applied on start properly (only when it was changed afterwards). This
+  is now fixed.
 
 [[v2.5.1]]
 v2.5.1 (2022-05-26)
