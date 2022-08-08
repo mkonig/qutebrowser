@@ -899,7 +899,7 @@ class HintManager(QObject):
             try:
                 if string.startswith(keystr):
                     matched = string[: len(keystr)]
-                    rest = string[len(keystr) :]
+                    rest = string[len(keystr):]
                     label.update_text(matched, rest)
                     # Show label again if it was hidden before
                     label.show()
@@ -1160,7 +1160,7 @@ class WordHinter:
             if not match:
                 continue
             if 4 < match.end() - match.start() < 8:
-                yield candidate[match.start() : match.end()].lower()
+                yield candidate[match.start():match.end()].lower()
 
     def any_prefix(self, hint: str, existing: Iterable[str]) -> bool:
         return any(hint.startswith(e) or e.startswith(hint) for e in existing)
@@ -1259,10 +1259,6 @@ class ContextHinter(WordHinter):
 
         yield ""
 
-    def get_chars_from_alphabet(self):
-        for char in ascii_lowercase:
-            yield char
-
     def _is_valid_hint(self, hint, existing_hints, hint_length):
         if (
             hint is None
@@ -1347,7 +1343,7 @@ class ContextHinter(WordHinter):
 
             # chars = config.val.hints.chars
             # min_chars = config.val.hints.min_chars
-            possible_hints = product("abcdefghijklmnopqrstxvwxyz", repeat = hint_length)
+            possible_hints = product("abcdefghijklmnopqrstxvwxyz", repeat=hint_length)
 
             for possibility in possible_hints:
                 tmp_hint = ''.join(reversed(possibility))
@@ -1412,7 +1408,7 @@ class ContextHinter(WordHinter):
         """
         hints = [""] * len(elems)
         used_hints = {}  # dict of url, hint
-        elem_order = ["textarea", "button", "a", "input", "img" ]
+        elem_order = ["textarea", "button", "a", "input", "img"]
         # log.hints.debug(elems)
         for elem in elems:
             if elem.tag_name() not in elem_order:
