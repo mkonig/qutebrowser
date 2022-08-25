@@ -143,6 +143,18 @@ Feature: Various utility commands.
         Then the error "[Errno 2] *: '/nonexistentfile'" should be shown
         And "No output or error" should not be logged
 
+    @qtwebkit_skip
+    Scenario: CSP errors in qutebrowser stylesheet script
+        When I open restrictive-csp
+        Then the javascript message "Refused to apply inline style because it violates the following Content Security Policy directive: *" should be logged
+
+    @qtwebkit_skip
+    Scenario: Third-party iframes in qutebrowser stylesheet script
+        When I load a third-party iframe
+        # rerun set_css in stylesheet.js
+        And I set content.user_stylesheets to []
+        Then the javascript message "Failed to style frame: Blocked a frame with origin * from accessing *" should be logged
+
     # :debug-webaction
 
     Scenario: :debug-webaction with valid value
