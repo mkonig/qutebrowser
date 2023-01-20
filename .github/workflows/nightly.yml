@@ -65,7 +65,7 @@ jobs:
             toxenv: build-release-qt6
             name: qt6-windows-64bit-debug
     runs-on: "${{ matrix.os }}"
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
         with:
@@ -90,6 +90,7 @@ jobs:
         run: |
             echo "date=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
             echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        shell: bash
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
