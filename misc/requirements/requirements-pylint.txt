@@ -4,7 +4,7 @@ astroid==2.12.14
 certifi==2022.12.7
 cffi==1.15.1
 charset-normalizer==3.0.1
-cryptography==39.0.0
+cryptography==39.0.1
 dill==0.3.6
 future==0.18.3
 github3.py==3.2.0
