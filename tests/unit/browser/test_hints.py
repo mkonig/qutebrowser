@@ -23,7 +23,7 @@ import operator
 import string
 
 import pytest
-from PyQt5.QtCore import QUrl
+from qutebrowser.qt.core import QUrl
 
 import qutebrowser.browser.hints
 from qutebrowser.utils import usertypes
