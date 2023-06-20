@@ -637,7 +637,7 @@ class HerbeNotificationAdapter(AbstractNotificationAdapter):
         if error == QProcess.ProcessError.Crashed:
             return
         name = debug.qenum_key(QProcess.ProcessError, error)
-        raise Error(f'herbe process error: {name}')
+        self.error.emit(f'herbe process error: {name}')
 
     @pyqtSlot(int)
     def on_web_closed(self, notification_id: int) -> None:
@@ -813,7 +813,7 @@ class DBusNotificationAdapter(AbstractNotificationAdapter):
             # https://github.com/sboli/twmn/pull/96
             return _ServerQuirks(spec_version="0")
         elif (name, vendor) == ("tiramisu", "Sweets"):
-            if utils.VersionNumber.parse(ver) < utils.VersionNumber(2, 0):
+            if utils.VersionNumber.parse(ver) < utils.VersionNumber(2):
                 # https://github.com/Sweets/tiramisu/issues/20
                 return _ServerQuirks(skip_capabilities=True)
         elif (name, vendor) == ("lxqt-notificationd", "lxqt.org"):

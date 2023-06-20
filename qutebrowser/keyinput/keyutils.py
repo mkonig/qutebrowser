@@ -74,11 +74,12 @@ except ValueError:
     # https://www.riverbankcomputing.com/pipermail/pyqt/2022-April/044607.html
     _NIL_KEY = 0
 
-_ModifierType = Qt.KeyboardModifier
 if machinery.IS_QT6:
     _KeyInfoType = QKeyCombination
+    _ModifierType = Qt.KeyboardModifier
 else:
     _KeyInfoType = int
+    _ModifierType = Union[Qt.KeyboardModifiers, Qt.KeyboardModifier]
 
 
 _SPECIAL_NAMES = {
@@ -259,7 +260,7 @@ def _modifiers_to_string(modifiers: _ModifierType) -> str:
     _assert_plain_modifier(modifiers)
     altgr = Qt.KeyboardModifier.GroupSwitchModifier
     if modifiers & altgr:
-        modifiers &= ~altgr  # type: ignore[assignment]
+        modifiers = _unset_modifier_bits(modifiers, altgr)
         result = 'AltGr+'
     else:
         result = ''
@@ -338,6 +339,21 @@ def _parse_special_key(keystr: str) -> str:
 def _parse_single_key(keystr: str) -> str:
     """Get a keystring for QKeySequence for a single key."""
     return 'Shift+' + keystr if keystr.isupper() else keystr
+
+
+def _unset_modifier_bits(
+    modifiers: _ModifierType, mask: _ModifierType
+) -> _ModifierType:
+    """Unset all bits in modifiers which are given in mask.
+
+    Equivalent to modifiers & ~mask, but with a WORKAROUND with PyQt 6,
+    for a bug in Python 3.11.4 where that isn't possible with an enum.Flag...:
+    https://github.com/python/cpython/issues/105497
+    """
+    if machinery.IS_QT5:
+        return cast(_ModifierType, modifiers & ~mask)
+    return Qt.KeyboardModifier(  # type: ignore[unreachable]
+        modifiers.value & ~mask.value)
 
 
 @dataclasses.dataclass(frozen=True, order=True)
@@ -419,7 +435,7 @@ class KeyInfo:
 
         if self.key in _MODIFIER_MAP:
             # Don't return e.g. <Shift+Shift>
-            modifiers &= ~_MODIFIER_MAP[self.key]  # type: ignore[assignment]
+            modifiers = _unset_modifier_bits(modifiers, _MODIFIER_MAP[self.key])
         elif _is_printable(self.key):
             # "normal" binding
             if not key_string:  # pragma: no cover
@@ -486,8 +502,8 @@ class KeyInfo:
             return QKeyCombination(self.modifiers, key)
 
     def with_stripped_modifiers(self, modifiers: Qt.KeyboardModifier) -> "KeyInfo":
-        mods = self.modifiers & ~modifiers
-        return KeyInfo(key=self.key, modifiers=mods)  # type: ignore[arg-type]
+        mods = _unset_modifier_bits(self.modifiers, modifiers)
+        return KeyInfo(key=self.key, modifiers=mods)
 
     def is_special(self) -> bool:
         """Check whether this key requires special key syntax."""
@@ -662,14 +678,14 @@ class KeySequence:
         _assert_plain_modifier(cast(Qt.KeyboardModifier, ev.modifiers()))
 
         key = _remap_unicode(key, ev.text())
-        modifiers = ev.modifiers()
+        modifiers: _ModifierType = ev.modifiers()
 
         if key == _NIL_KEY:
             raise KeyParseError(None, "Got nil key!")
 
         # We always remove Qt.KeyboardModifier.GroupSwitchModifier because QKeySequence has no
         # way to mention that in a binding anyways...
-        modifiers &= ~Qt.KeyboardModifier.GroupSwitchModifier
+        modifiers = _unset_modifier_bits(modifiers, Qt.KeyboardModifier.GroupSwitchModifier)
 
         # We change Qt.Key.Key_Backtab to Key_Tab here because nobody would
         # configure "Shift-Backtab" in their config.
@@ -687,10 +703,10 @@ class KeySequence:
         # In addition, Shift also *is* relevant when other modifiers are
         # involved. Shift-Ctrl-X should not be equivalent to Ctrl-X.
         shift_modifier = Qt.KeyboardModifier.ShiftModifier
-        if (modifiers == shift_modifier and  # type: ignore[comparison-overlap]
+        if (modifiers == shift_modifier and
                 _is_printable(key) and
                 not ev.text().isupper()):
-            modifiers = Qt.KeyboardModifier.NoModifier  # type: ignore[assignment]
+            modifiers = Qt.KeyboardModifier.NoModifier
 
         # On macOS, swap Ctrl and Meta back
         #
@@ -702,10 +718,10 @@ class KeySequence:
             if modifiers & Qt.KeyboardModifier.ControlModifier and modifiers & Qt.KeyboardModifier.MetaModifier:
                 pass
             elif modifiers & Qt.KeyboardModifier.ControlModifier:
-                modifiers &= ~Qt.KeyboardModifier.ControlModifier
+                modifiers = _unset_modifier_bits(modifiers, Qt.KeyboardModifier.ControlModifier)
                 modifiers |= Qt.KeyboardModifier.MetaModifier
             elif modifiers & Qt.KeyboardModifier.MetaModifier:
-                modifiers &= ~Qt.KeyboardModifier.MetaModifier
+                modifiers = _unset_modifier_bits(modifiers, Qt.KeyboardModifier.MetaModifier)
                 modifiers |= Qt.KeyboardModifier.ControlModifier
 
         infos = list(self)

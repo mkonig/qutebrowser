@@ -31,7 +31,7 @@ import vulture
 
 import qutebrowser.app  # pylint: disable=unused-import
 from qutebrowser.extensions import loader
-from qutebrowser.misc import objects, sql
+from qutebrowser.misc import objects, sql, nativeeventfilter
 from qutebrowser.utils import utils, version, qtutils
 # To run the decorators from there
 # pylint: disable=unused-import
@@ -121,6 +121,9 @@ def whitelist_generator():  # noqa: C901
     for dist in version.Distribution:
         yield 'qutebrowser.utils.version.Distribution.{}'.format(dist.name)
 
+    for opcode in nativeeventfilter.XcbInputOpcodes:
+        yield f'qutebrowser.misc.nativeeventfilter.XcbInputOpcodes.{opcode.name}'
+
     # attrs
     yield 'qutebrowser.browser.webkit.network.networkmanager.ProxyId.hostname'
     yield 'qutebrowser.command.command.ArgInfo._validate_exclusive'
@@ -139,6 +142,9 @@ def whitelist_generator():  # noqa: C901
     yield 'world_id_type'
     yield 'ParserDictType'
     yield 'qutebrowser.config.configutils.Values._VmapKeyType'
+
+    # used in tests
+    yield 'qutebrowser.qt.machinery.SelectionReason.fake'
 
     # ELF
     yield 'qutebrowser.misc.elf.Endianness.big'
